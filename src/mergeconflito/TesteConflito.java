@@ -1,5 +1,5 @@
 package mergeconflito;
 
 public class TesteConflito {
-    String teste = "Helo World!";
+    String teste = "Hello World!";
 }
