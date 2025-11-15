@@ -19,17 +19,16 @@ public class GildedRose {
 
     public void updateQuality() {
         for (Item item : items) {
-            updateItem(item);
+            updateSingleItem(item);
         }
     }
 
-    private void updateItem(Item item) {
+    private void updateSingleItem(Item item) {
         if (item.name.equals(SULFURAS)) {
-            return; 
+            return;
         }
+        updateQualityStandardPhase(item);
 
-        updateStandardQuality(item);
-        
         if (!item.name.equals(ETERNAL_ARTIFACT)) {
             item.sellIn--;
         }
@@ -39,49 +38,69 @@ public class GildedRose {
         }
     }
 
-    private void updateStandardQuality(Item item) {
-        if (item.name.equals(AGED_BRIE)) {
-            increaseQuality(item);
-        } else if (item.name.equals(BACKSTAGE_PASSES)) {
-            increaseQuality(item);
-            if (item.sellIn < BACKSTAGE_THRESHOLD_1) {
+    private void updateQualityStandardPhase(Item item) {
+        switch (item.name) {
+            case AGED_BRIE:
                 increaseQuality(item);
-            }
-            if (item.sellIn < BACKSTAGE_THRESHOLD_2) {
+                break;
+            
+            case BACKSTAGE_PASSES:
                 increaseQuality(item);
-            }
-        } else if (item.name.equals(ETERNAL_ARTIFACT)) {
-             if (item.sellIn % 2 == 0) {
+                if (item.sellIn < BACKSTAGE_THRESHOLD_1) {
+                    increaseQuality(item);
+                }
+                if (item.sellIn < BACKSTAGE_THRESHOLD_2) {
+                    increaseQuality(item);
+                }
+                break;
+
+            case ETERNAL_ARTIFACT:
+                if (item.sellIn % 2 == 0) {
+                    increaseQuality(item);
+                }
+                break;
+            
+            case CONJURED:
                 increaseQuality(item);
-            }
-        } else if (item.name.equals(CONJURED)) {
-             increaseQuality(item); 
-        } else {
-            decreaseQuality(item);
-            if (item.name.contains(PERISHABLE_KEYWORD)) {
+                break;
+
+            default:
+                if (item.name.contains(PERISHABLE_KEYWORD)) {
+                    decreaseQuality(item);
+                }
                 decreaseQuality(item);
-            }
+                break;
         }
     }
 
     private void handleExpiration(Item item) {
-        if (item.name.equals(AGED_BRIE)) {
-            increaseQuality(item);
-        } else if (item.name.equals(BACKSTAGE_PASSES)) {
-            item.quality = 0;
-        } else if (item.name.equals(ETERNAL_ARTIFACT)) {
-            increaseQuality(item);
-        } else if (item.name.equals(CONJURED)) {
-            decreaseQuality(item);
-        } else {
-            decreaseQuality(item);
-            if (item.name.contains(PERISHABLE_KEYWORD)) {
+        switch (item.name) {
+            case AGED_BRIE:
+                increaseQuality(item);
+                break;
+
+            case BACKSTAGE_PASSES:
+                item.quality = 0;
+                break;
+
+            case ETERNAL_ARTIFACT:
+                increaseQuality(item);
+                break;
+            
+            case CONJURED:
                 decreaseQuality(item);
+                break;
+
+            default:
+                if (item.name.contains(PERISHABLE_KEYWORD)) {
+                    decreaseQuality(item);
+                    decreaseQuality(item);
+                }
                 decreaseQuality(item);
-            }
+                break;
         }
     }
-    
+
     private void increaseQuality(Item item) {
         if (item.quality < MAX_QUALITY) {
             item.quality++;
