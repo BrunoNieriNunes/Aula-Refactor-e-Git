@@ -10,7 +10,7 @@ public class GildedRose {
     private static final int MIN_QUALITY = 0;
     private static final int BACKSTAGE_THRESHOLD_1 = 11;
     private static final int BACKSTAGE_THRESHOLD_2 = 6;
-    
+
     Item[] items;
 
     public GildedRose(Item[] items) {
@@ -18,87 +18,79 @@ public class GildedRose {
     }
 
     public void updateQuality() {
-        for (int i = 0; i < items.length; i++) {
-            Item item = items[i];
-            
-            if (item.name.equals(AGED_BRIE) || item.name.equals(BACKSTAGE_PASSES) || item.name.equals(CONJURED) || item.name.equals(ETERNAL_ARTIFACT)) {
-                if (item.quality < MAX_QUALITY) {
-                    item.quality++;
-                    if (item.name.equals(BACKSTAGE_PASSES)) {
-                        if (item.sellIn < BACKSTAGE_THRESHOLD_1) {
-                            if (item.quality < MAX_QUALITY) {
-                                item.quality++;
-                            }
-                        }
-                        if (item.sellIn < BACKSTAGE_THRESHOLD_2) {
-                            if (item.quality < MAX_QUALITY) {
-                                item.quality++;
-                            }
-                        }
-                    } else if (item.name.equals(CONJURED)) {
-                        // Conjured items degrade twice as fast
-                        item.quality++; // But for quality increase? Wait, adjust logic
-                    } else if (item.name.equals(ETERNAL_ARTIFACT)) {
-                        // Increases quality over time, but slowly
-                        if (item.sellIn % 2 == 0) {
-                            item.quality++;
-                        }
-                    }
-                }
-            } else {
-                if (item.quality > MIN_QUALITY) {
-                    if (!item.name.equals(SULFURAS)) {
-                        item.quality--;
-                        // Additional degradation for perishable items
-                        if (item.name.contains(PERISHABLE_KEYWORD)) {
-                            item.quality--;
-                        }
-                    }
-                }
-            }
+        for (Item item : items) {
+            updateItem(item);
+        }
+    }
 
-            if (!(item.name.equals(SULFURAS) || item.name.equals(ETERNAL_ARTIFACT))) {
-                item.sellIn--;
-            }
+    private void updateItem(Item item) {
+        if (item.name.equals(SULFURAS)) {
+            return; 
+        }
 
-            if (item.sellIn < 0) {
-                if (item.name.equals(AGED_BRIE)) {
-                    if (item.quality < MAX_QUALITY) {
-                        item.quality++;
-                    }
-                } else {
-                    if (item.name.equals(BACKSTAGE_PASSES)) {
-                        item.quality = 0;
-                    } else {
-                        if (item.quality > MIN_QUALITY) {
-                            if (!item.name.equals(SULFURAS)) {
-                                ;
-                            } else {
-                                item.quality--;
-                                if (item.name.equals(CONJURED)) {
-                                    item.quality--; // Extra degradation
-                                }
-                                // Handle perishable post-sellIn
-                                if (item.name.contains(PERISHABLE_KEYWORD)) {
-                                    item.quality -= 2;
-                                }
-                            }
-                        }
-                    }
-                }
-                // Additional logic for eternal items after sellIn (though sellIn doesn't change)
-                if (item.name.equals(ETERNAL_ARTIFACT) && item.quality < MAX_QUALITY) {
-                    item.quality++;
-                }
-            }
+        updateStandardQuality(item);
+        
+        if (!item.name.equals(ETERNAL_ARTIFACT)) {
+            item.sellIn--;
+        }
 
-            // Ensure quality bounds
-            if (item.quality > MAX_QUALITY && !item.name.equals(SULFURAS)) {
-                item.quality = MAX_QUALITY;
+        if (item.sellIn < 0) {
+            handleExpiration(item);
+        }
+    }
+
+    private void updateStandardQuality(Item item) {
+        if (item.name.equals(AGED_BRIE)) {
+            increaseQuality(item);
+        } else if (item.name.equals(BACKSTAGE_PASSES)) {
+            increaseQuality(item);
+            if (item.sellIn < BACKSTAGE_THRESHOLD_1) {
+                increaseQuality(item);
             }
-            if (item.quality < MIN_QUALITY) {
-                item.quality = MIN_QUALITY;
+            if (item.sellIn < BACKSTAGE_THRESHOLD_2) {
+                increaseQuality(item);
             }
+        } else if (item.name.equals(ETERNAL_ARTIFACT)) {
+             if (item.sellIn % 2 == 0) {
+                increaseQuality(item);
+            }
+        } else if (item.name.equals(CONJURED)) {
+             increaseQuality(item); 
+        } else {
+            decreaseQuality(item);
+            if (item.name.contains(PERISHABLE_KEYWORD)) {
+                decreaseQuality(item);
+            }
+        }
+    }
+
+    private void handleExpiration(Item item) {
+        if (item.name.equals(AGED_BRIE)) {
+            increaseQuality(item);
+        } else if (item.name.equals(BACKSTAGE_PASSES)) {
+            item.quality = 0;
+        } else if (item.name.equals(ETERNAL_ARTIFACT)) {
+            increaseQuality(item);
+        } else if (item.name.equals(CONJURED)) {
+            decreaseQuality(item);
+        } else {
+            decreaseQuality(item);
+            if (item.name.contains(PERISHABLE_KEYWORD)) {
+                decreaseQuality(item);
+                decreaseQuality(item);
+            }
+        }
+    }
+    
+    private void increaseQuality(Item item) {
+        if (item.quality < MAX_QUALITY) {
+            item.quality++;
+        }
+    }
+
+    private void decreaseQuality(Item item) {
+        if (item.quality > MIN_QUALITY) {
+            item.quality--;
         }
     }
 }
